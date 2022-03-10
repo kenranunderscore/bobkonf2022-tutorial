@@ -1,5 +1,24 @@
 { config, pkgs, lib, ... }:
 
+# Simples pinning von nixpkgs.
+#
+# # Statt Zeile 1 Folgendes ('pkgs' nicht mehr als Input):
+# { config, lib, ... }:
+#
+# let
+#   # Ausgesuchter Commit:
+#   rev = "3e644bd62489b516292c816f70bf0052c693b3c7";
+#   nixpkgsSources = builtins.fetchTarball {
+#     name = "nixpkgs-unstable-sources-bobkonf2022";
+#     url = "https://github.com/nixos/nixpkgs/archive/${rev}.tar.gz";
+#     # Entweder sha256 durch '00...' ersetzen und bei Mismatch Ergebnis
+#     # hier einfügen; oder:
+#     # nix-prefetch-url --unpack https://github.com/nixos/nixpkgs/archive/<rev>.tar.gz
+#     sha256 = "1bkqdwcmap2km4dpib0pzgmj66w74xvr8mrvsshp7y569lj40qxi";
+#   };
+#   pkgs = import nixpkgsSources { };
+# in
+
 {
   imports = [ ./bat ];
 
