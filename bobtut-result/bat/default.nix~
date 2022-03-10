@@ -1,4 +1,0 @@
-home.packages = [ pkgs.bat ];
-
-
-      home.file.".config/bat/config".source = ./batconfig;
