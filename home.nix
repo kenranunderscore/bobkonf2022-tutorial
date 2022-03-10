@@ -7,7 +7,7 @@
     username = "jo";
     homeDirectory = "/home/jo";
 
-    packages = [ pkgs.bat pkgs.curl pkgs.fd pkgs.nixfmt ];
+    packages = with pkgs; [ bat curl fd nixfmt pass ];
 
     file = {
       ".config/alacritty/alacritty.yml".source = ./alacritty.yml;
@@ -67,7 +67,32 @@
         brettm12345.nixfmt-vscode
       ];
     };
+
+    mbsync.enable = true;
+    msmtp.enable = true;
   };
 
   nixpkgs.config = { allowUnfree = true; };
+
+  accounts.email = {
+    maildirBasePath = ".mail";
+    accounts = {
+      bobGmail = rec {
+        # Magic: setzt IMAP und SMTP
+        flavor = "gmail.com";
+        primary = true;
+        address = "bobkonf2022hm@gmail.com";
+        userName = address;
+        passwordCommand = "pass show mail/bobkonf2022hm@gmail.com";
+        # Maildir empfangen
+        mbsync = {
+          enable = true;
+          create = "both";
+          remove = "both";
+          expunge = "both";
+        };
+        msmtp.enable = true;
+      };
+    };
+  };
 }
