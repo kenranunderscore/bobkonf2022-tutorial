@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports = [ ./bat ];
@@ -9,11 +9,23 @@
     username = "jo";
     homeDirectory = "/home/jo";
 
-    packages = with pkgs; [ curl fd nixfmt pass ];
+    packages = with pkgs; [ curl fd nixfmt pass emacs ];
 
     file = {
       ".config/alacritty/alacritty.yml".source = ./alacritty.yml;
       ".ssh/config".source = ./sshconfig;
+      # ".emacs.d" = {
+      #   source = ./emacs.d;
+      #   recursive = true;
+      # };
+    };
+
+    activation = {
+      symlinkDotEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if [ ! -e $HOME/.emacs.d ]; then
+          $DRY_RUN_CMD ln -snf $HOME/.config/nixpkgs/emacs.d $HOME/.emacs.d
+        fi
+      '';
     };
 
     # This value determines the Home Manager release that your
