@@ -1,0 +1,322 @@
+* =$HOME= Improvement mit Nix
+* Szenario
+
+Wir brauchen eine Entwicklungsumgebung auf neuem Rechner.  Was
+bedeutet das?
+
+- Installierte Programme
+- Konfigurationsdateien (oft in =$HOME= oder =~/.config=)
+- Evtl. auch Privates wie =ssh=- oder =gpg=-Schlüssel
+- Sonstige Daten
+
+Wir wollen "einfach alles rüberziehen", möglichst wenig Arbeit haben.
+Anschließend sollte "alles gleich funktionieren".  Idealerweise ist
+uns sogar das genaue OS dabei egal.
+
+* Bestandsaufnahme
+
+1. Was ist "alles"; welche Konfigurationsdateien brauchen wir?
+2. Welche Programme müssen installiert werden?
+
+-> "Was ist die Entwicklungsumgebung?"
+  
+* Mögliche Ansätze/Ideen
+
+- Versionskontrolle nutzen
+- GNU Stow
+- ...
+
+* Versionskontrollierte Konfigurationsdateien
+
+- Sammeln Konfigurationsdateien in Repository -> Frage 1 beantwortet
+- Dateien müssen an "ihren Platz" verschoben oder gelinkt werden
+- Was ist "ihr Platz"? -> vielleicht ein Shell-Skript fürs
+  Bootstrapping?
+- Programme auch im Skript installieren? => Abhängigkeit von
+  OS/Package-Manager
+
+* =$HOME= als Repository
+
+- Klonen und alles liegt bereits am richtigen Platz!
+- Aber: wir wollen nicht /alles/ aus =$HOME= einchecken
+- -> In der Regel viele =.gitignore=-Dateien mit Negationsregeln
+- Programme?
+
+* Ist auch das Programm-Problem lösbar?
+
+- OS-unabhängiger Paketmanager: Nix
+
+* Home manager (powered by Nix)
+
+https://github.com/nix-community/home-manager
+
+- Verbindet Datei- und Programmmanagement
+- Erzeugt Symlinks auf Konfigurationsdateien (via Nix)
+- Installiert Programme als Symlinks (via Nix)
+- Konfiguration via [[file:/ssh:bobtut-result:~/.config/nixpkgs/home.nix][~/.config/nixpkgs/home.nix]]
+- [ Vorführung =bobtut-result=: =home.nix= zeigen ]
+  1. Leere VM
+  2. =hs=
+  3. Änderung
+  4. =hs=
+  5. Rollback?
+
+* Ziel des Tutorials
+
+- Einstieg in =home-manager= erleichtern
+- Showcase für Workflow
+
+* Was ist Nix?
+
+- Paketmanager
+- Programmiersprache
+- Git-Repository -> Pakete: [[https://github.com/nixos/nixpkgs][nixpkgs]]
+- (Betriebssystem: NixOS)
+
+* Wie funktioniert Nix?
+
+- Funktional: "Pakete/Builds sind Funktionen ihrer Abhängigkeiten"
+- Alles liegt im Nix-Store =/nix/store=, mit Hash versehen
+- -> Reproduzierbarkeit
+- -> Binary-Caching etc.
+
+* Background der Teilnehmer:innen?
+* Die Sprache Nix
+
+- (Fast rein) funktional
+- Lazy
+- Dynamisch typisiert
+- Ungewohnt
+
+* Primitive Typen: Zahlen
+
+In =nix repl '<nixpkgs>'=:
+
+#+begin_src nix
+17
+-1.2
+#+end_src
+
+* Primitive Typen: Strings
+
+#+begin_src nix
+"hello world"
+#+end_src
+
+* Primitive Typen: Pfade und URIs
+
+#+begin_src nix
+./Foo.hs
+https://github.com/nixos/nixpkgs
+#+end_src
+
+* Listen
+
+/Nicht/ kommasepariert!
+
+#+begin_src nix
+[1 "abc" 4]
+#+end_src
+
+Listenkonkatenation
+
+#+begin_src nix
+[1 2] ++ [3 4]
+#+end_src
+
+* =let=
+
+Mit =let= definieren wir lokale Variablen.
+
+#+begin_src nix
+let a = 3; in a + 17
+#+end_src
+
+Mehrere Variablen auf einmal:
+
+#+begin_src nix
+let a = 3;
+    b = 4;
+in a + b
+#+end_src
+
+* Funktionen
+
+#+begin_src nix
+let appendFoo = s: s + "foo";
+in appendFoo "hello"
+#+end_src
+
+Klammern nicht benötigt!
+
+* Funktionen sind geschönfinkelt
+
+#+begin_src nix
+let plus = x: y: x + y;
+    plusTwo = plus 2;
+in plusTwo 5
+#+end_src
+
+* Sets
+
+A.k.a. "maps" oder "dictionaries": Liste von Key-Value-Paaren
+
+#+begin_src nix
+let mySet = { a = 3; b = 17; };
+in mySet.a + mySet.b
+#+end_src
+
+String-Attribute; nur keine Duplikate.
+
+#+begin_src nix
+{ "hi there" = 5; }
+#+end_src
+
+* Verschachtelte Sets; Kurzschreibweise
+
+"Setzen" von verschachtelten Attributen erzeugt entsprechend
+geschachtelte Sets
+
+#+begin_src nix
+let a.b.c = "inner"; in a
+# Achtung laziness!
+
+let a.b.c = "inner"; in a.b
+#+end_src
+
+* Sets: Default-Werte und Destructuring
+
+Sets sind oft Argumente von Funktionen.
+
+#+begin_src nix
+f = { mandatory, optional ? 3 }: mandatory - optional
+
+f { mandatory = 2; }
+# -1
+
+f { mandatory = 2; optional = 4; }
+# -2
+
+f { mandatory = 2; optional = 4; unused = "hi"; }
+# -2
+#+end_src
+
+"Überflüssige" Schlüssel erlauben:
+
+#+begin_src nix
+f = { mandatory, optional ? 3, ... }: mandatory - optional
+#+end_src
+
+* Attribute erben: =inherit=
+
+Gebundene Variablen können in Sets aufgenommen werden.
+
+#+begin_src nix
+let foo = "foo"; in { inherit foo; }
+#+end_src
+
+Syntaktischer Zucker für
+
+#+begin_src nix
+let foo = "foo"; in { foo = foo; }
+#+end_src
+
+Funktioniert auch mit nicht direkt gebundenen Attributen aus Sets:
+
+#+begin_src nix
+let mySet = { foo = 3; };
+in { inherit (mySet) foo; }
+#+end_src
+
+* Nix-Expressions laden: =import=
+
+Eine Datei mit einer Nix-Expression (hier: Funktion) erzeugen:
+
+#+begin_src shell
+echo '{ x ? 5 }: 3 * x' > triple.nix
+#+end_src
+
+=import= lädt die in einer Datei enthaltene Expression.  Argumente an
+Funktionen können dabei direkt übergeben werden.
+
+#+begin_src nix
+let f = import ./triple.nix;
+in f { x = 2; }
+
+# Alternativ und idiomatisch:
+import ./triple.nix { x = 2; }
+#+end_src
+
+* Sets "entpacken": =with=
+
+#+begin_src nix
+people = { jenny = { age = 47; }; george = { age = 35; }; kim = { age = 22; }; }
+
+ages = [ people.jenny.age people.george.age people.kim.age ]
+#+end_src
+
+Stattdessen:
+
+#+begin_src nix
+ages = with people; [ jenny.age george.age kim.age ]
+#+end_src
+
+Oder:
+
+#+begin_src nix
+ages = map (x: x.age) (with people; [ jenny george kim ])
+#+end_src
+
+* String-Interpolation: =${}=
+
+#+begin_src nix
+{ "${if false then "false" else "nice"}" = 5; }
+#+end_src
+
+* Live-Umbau
+* Vorteile von =home-manager=
+
+- /Eine/ Umgebung auf vielen Systemen (inkl. Programmen und Services!)
+- Unabhängig von OS: sogar auf WSL2
+- Alle Vorteile von Nix (deklarativ, Patchbarkeit, "Rollbacks", ...)
+- Experimentieren einfach und gefahrlos
+
+* Nachteile
+
+- Lernkurve
+- Readme: selten kryptische Fehlermeldungen
+
+* Ablauf: Neues System einspielen
+
+- Installiere Nix
+- Home-Manager installieren
+- Git-Repo klonen/herunterladen
+- (=home.nix= an richtige Stelle)
+- Secrets einspielen
+- =home-manager switch=
+
+* Secret-Management: Ideen und Erfahrungen
+
+Problem: =/nix/store= ist für alle User lesbar
+
+- Manuelles Kopieren
+- =rsync=
+- Verschlüsseltes Archiv mit einchecken
+- Tools, bspw. https://github.com/ryantm/agenix
+
+* Ausblicke
+
+- Pinning
+- Window manager (für Konfig auf non-NixOS)
+- Services: =systemd= und mittlerweile sogar =launchd=
+- Flakes
+- NixOS / Guix
+
+* Links
+
+- Bei Fragen: https://github.com/nix-community/home-manager#contact
+  (z.B. Matrix-Chat)
+- Evie Ciobanu - How I Nix:
+  https://eevie.ro/posts/2022-01-24-how-i-nix.html
+- Meine "dotfiles": https://github.com/kenranunderscore/dotfiles
+
