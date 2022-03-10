@@ -28,17 +28,27 @@
     username = "jo";
     homeDirectory = "/home/jo";
 
+    # Liste von Programmen, die installiert sein sollen.
     packages = with pkgs; [ curl fd nixfmt pass emacs ];
 
     file = {
       ".config/alacritty/alacritty.yml".source = ./alacritty.yml;
       ".ssh/config".source = ./sshconfig;
+
+      # Naiver Ansatz -> readonly Emacs-Konfiguration. Siehe `activation`
+      # für "Trick"/"Hack".
       # ".emacs.d" = {
       #   source = ./emacs.d;
       #   recursive = true;
       # };
     };
 
+    # Einhängen in die Aktivierungsphase von home-manager. Hier
+    # erstellen wir einen Symlink auf die Datei im Repo, ohne den
+    # Umweg über den /nix/store.
+    #
+    # $DRY_RUN_CMD sorgt dafür, dass bei einem `home-manager`-Aufruf
+    # mit dem Flag --dry-run auch hier kein Code läuft.
     activation = {
       symlinkDotEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -e $HOME/.emacs.d ]; then
@@ -63,7 +73,9 @@
     home-manager.enable = true;
 
     fish = {
-      # Standard
+      # Standard: ohne `enable = true;` kein Programm! Kann bspw. auf
+      # `false` gesetzt werden, um schnell etwas
+      # auszukommentieren/rauszunehmen.
       enable = true;
       functions = {
         fish_prompt = ''
@@ -75,16 +87,21 @@
           echo "BOB 2022"
         '';
       };
+      # Cooles fish-Feature (imho)
       shellAbbrs = { hs = "home-manager switch"; };
     };
 
     git = {
       enable = true;
-      # NOTE: Erklären: custom Package! + nix repl '<nixpkgs>'!!!
+      # NOTE: Erklären: custom Package + nix repl '<nixpkgs>'!
       # package = pkgs.gitAndTools;
       userName = "Johannes";
       userEmail = "johannes.maier@active-group.de";
       aliases = { pushf = "push --force-with-lease"; };
+      # Viele Pakete, die via programs.<xyz> konfiguriert werden
+      # können, haben eine `extraConfig`; manchmal im Nix-"Format" wie
+      # hier, manchmal aber auch als Multiline-Strings im
+      # Originalformat.
       extraConfig = {
         core.askPass = "";
         init.defaultBranch = "main";
@@ -93,6 +110,7 @@
       };
     };
 
+    # Visual Studio Code mit "eingebauten" Erweiterungen.
     vscode = {
       enable = true;
       mutableExtensionsDir = true;
@@ -102,29 +120,46 @@
       ];
     };
 
+    # Muss man leider beides anschalten, da das `enable` weiter unten
+    # bei accounts.email.accounts.<name>... nicht das Programm
+    # mitbringt.
     mbsync.enable = true;
     msmtp.enable = true;
   };
 
+  # Beeinflusst so nur das Package-Set, das von home-manager genutzt
+  # wird.  Siehe `man home-configuration.nix` für Beispielcode, wie
+  # man auch das "globale" <nixpkgs> via Konfigurationsdatei
+  # mitsteuert.
   nixpkgs.config = { allowUnfree = true; };
 
+  # Deklarative E-Mail-Konfiguration für Maildir-Benutzung (hier
+  # GMail).  Erzeugt automatisch Konfigurationsdateien für
+  # bspw. mbsync/isync, msmtp, offlineimap, etc.  Für diejenigen
+  # interessant, die ihren E-Mail-Verkehr über Maildir und/oder
+  # Programme wie notmuch, mu, mutt etc. managen wollen.
   accounts.email = {
     maildirBasePath = ".mail";
     accounts = {
       bobGmail = rec {
         # Magic: setzt IMAP und SMTP
         flavor = "gmail.com";
+        # Es muss genau einen Primäraccount geben.
         primary = true;
         address = "bobkonf2022hm@gmail.com";
         userName = address;
+        # GNU Pass kann genutzt werden, um ein Passwort für die
+        # Anmeldung abzufragen.
         passwordCommand = "pass show mail/bobkonf2022hm@gmail.com";
-        # Maildir empfangen
+        # Maildirsynchronisation
         mbsync = {
           enable = true;
           create = "both";
           remove = "both";
           expunge = "both";
         };
+        # Zum Versenden von Mails (gibt sich [bei mir] als `sendmail`
+        # aus)
         msmtp.enable = true;
       };
     };
