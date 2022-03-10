@@ -1,17 +1,18 @@
 { config, pkgs, ... }:
 
 {
+  imports = [ ./bat ];
+
   home = {
     # Home Manager needs a bit of information about you and the
     # paths it should manage.
     username = "jo";
     homeDirectory = "/home/jo";
 
-    packages = with pkgs; [ bat curl fd nixfmt pass ];
+    packages = with pkgs; [ curl fd nixfmt pass ];
 
     file = {
       ".config/alacritty/alacritty.yml".source = ./alacritty.yml;
-      ".config/bat/config".source = ./batconfig;
       ".ssh/config".source = ./sshconfig;
     };
 
