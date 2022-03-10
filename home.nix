@@ -58,5 +58,16 @@
         merge.conflictstyle = "diff3";
       };
     };
+
+    vscode = {
+      enable = true;
+      mutableExtensionsDir = true;
+      extensions = with pkgs.vscode-extensions; [
+        bbenoist.nix
+        brettm12345.nixfmt-vscode
+      ];
+    };
   };
+
+  nixpkgs.config = { allowUnfree = true; };
 }
