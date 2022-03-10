@@ -319,4 +319,5 @@ Problem: =/nix/store= ist für alle User lesbar
 - Evie Ciobanu - How I Nix:
   https://eevie.ro/posts/2022-01-24-how-i-nix.html
 - Meine "dotfiles": https://github.com/kenranunderscore/dotfiles
-
+- Repo zum Tutorial:
+  https://github.com/kenranunderscore/bobkonf2022-tutorial 
