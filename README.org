@@ -1,0 +1,7 @@
+* =$HOME= Improvement mit Nix
+
+Beispiel-Repository zu meinem [[https://bobkonf.de/2022/maier.html][BOBKonf2022-Tutorial]] über deklaratives
+Dotfile- und Programmmanagement mit [[https://github.com/nix-community/home-manager][home-manager]] und [[https://nixos.org][Nix]].
+
+- [[file:tutorial.org]["Slides"]]
+- [[file:bobtut-result/][Resultierende Home-Manager-Konfiguration]]
