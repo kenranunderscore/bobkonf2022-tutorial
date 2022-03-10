@@ -11,7 +11,7 @@ window:
   dynamic_title: true
 
 font:
-  size: 18.0
+  size: 23.0
   normal:
     family: Ubuntu Mono
     style: Regular
