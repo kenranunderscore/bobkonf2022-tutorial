@@ -49,6 +49,8 @@
 
     git = {
       enable = true;
+      # NOTE: Erklären: custom Package! + nix repl '<nixpkgs>'!!!
+      # package = pkgs.gitAndTools;
       userName = "Johannes";
       userEmail = "johannes.maier@active-group.de";
       aliases = { pushf = "push --force-with-lease"; };
