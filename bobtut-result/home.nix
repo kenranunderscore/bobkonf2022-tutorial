@@ -1,6 +1,12 @@
 { config, pkgs, lib, ... }:
 
-# Simples pinning von nixpkgs.
+# Simples pinning von nixpkgs.  Dies zeigt, wie man generall "Dinge"
+# mit festem Commit via Git laden und den Hash dazu angeben kann.  Für
+# ein "richtiges", produktives Pinning, das auch home-manager selbst
+# beinhaltet, empfehle ich im ersten Ansatz `niv`.  Siehe dazu:
+#
+# - https://eevie.ro/posts/2022-01-24-how-i-nix.html
+# - https://github.com/ryantm/home-manager-template
 #
 # # Statt Zeile 1 Folgendes ('pkgs' nicht mehr als Input):
 # { config, lib, ... }:
